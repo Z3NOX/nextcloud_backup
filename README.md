@@ -2,7 +2,7 @@
 
 Webspace like e.g. provided via Nextcloud can be used to backup files. A good backup stragegy should integrate as good as possible into your daily work, such that the backups can be done hassle-free. This description will show you how to use [BorgBackup](https://borgbackup.readthedocs.io/en/stable/index.html) to first create snapshots of your local data and later send them via [Rclone](https://rclone.org/) to your webspace. 
 
-## BorgBackup
+### BorgBackup
 BorgBackup, or short simply "borg", is a python commandline tool, which lets you create archives of files with the following features:
  * **compression**: Files can be compressed
    with different methods if wanted
@@ -24,11 +24,12 @@ BorgBackup, or short simply "borg", is a python commandline tool, which lets you
    
    ![There is no Cloud](images/nocloud.png)
 
-## Rclone
+### Rclone
 
 To synchronise the archive made by borg to Nextcloud we use Rclone. Rclone is able to commuticate with a lot of storage providing software out there. So you might have a look at the [supported providers](https://rclone.org/#providers) if you are interested in using this documentation with something other than Nextcloud.
 
-# Setting up BorgBackup to do its job
+# BorgBackup
+## installation
 First you have to [install](https://borgbackup.readthedocs.io/en/latest/installation.html) borg. As it is available on the repositories of many platforms, it might just be as easy as
 ```
 sudo apt install borgbackup
@@ -38,7 +39,8 @@ or
 sudo pacman -S borg
 ```
 
-# Rclone installation and configuration
+# Rclone
+## installation
 First, [install](https://rclone.org/install/) Rclone as well.
 ```
 sudo apt install rclone
@@ -149,6 +151,6 @@ rclone lsd nextcloud-name:/
 ```
 and a list of directories already existant on your nextcloud should pop up. If this is the case, everything works as it should.
 
-> **TIP:** Use a password to keep your rclone configuration save. Do this by typing `s` to `rclone config`. This way you have to enter the password before using rclone. This might seem tedious but in this scenario nobody with bare access to your local user can simply alter the contents of your cloud. In a later step of the automatization we can store the password in a environment variable `RCLONE_CONFIG_PASS` to provide it behind-the-scenes to rclone.
+> **TIP:** Use a *configuration password* to keep your rclone configuration save. Do this by typing `s` to `rclone config`. This way you have to enter the password before using rclone. This might seem tedious but in this scenario nobody with bare access to your local user can simply alter the contents of your cloud. In a later step of the automatization we can store the password in a environment variable `RCLONE_CONFIG_PASS` to provide it behind-the-scenes to rclone.
 
 In the same manner you could add more and different webspace options to your rclone config.
