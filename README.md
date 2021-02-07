@@ -149,4 +149,6 @@ rclone lsd nextcloud-name:/
 ```
 and a list of directories already existant on your nextcloud should pop up. If this is the case, everything works as it should.
 
+> **TIP:** Use a password to keep your rclone configuration save. Do this by typing `s` to `rclone config`. This way you have to enter the password before using rclone. This might seem tedious but in this scenario nobody with bare access to your local user can simply alter the contents of your cloud. In a later step of the automatization we can store the password in a environment variable `RCLONE_CONFIG_PASS` to provide it behind-the-scenes to rclone.
+
 In the same manner you could add more and different webspace options to your rclone config.
