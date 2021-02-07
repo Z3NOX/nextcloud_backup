@@ -57,7 +57,7 @@ n/s/q> n
 name> nextcloud-name
 ```
 
-Choose `webdav` as this is the network protocol used by nextcloud, see [here](https://rclone.org/webdav/), provide an URL to the webdav endpoint (usually by adding `remote.php/webdav` to your base URL and lateron specify the type of webdav connection - `nextcloud` in this case.
+Choose `webdav` as this is the network protocol used by nextcloud, see [here](https://rclone.org/webdav/), provide an URL to the webdav endpoint (usually by adding `remote.php/webdav` to your base URL) and lateron specify the type of webdav connection - `nextcloud` in this case.
 
 ```
 Type of storage to configure.
@@ -83,7 +83,8 @@ Choose a number from below, or type in your own value
    \ "other"
 vendor>nextcloud
 ```
-Now provide your individual login information. (**TIP:** It is very handy to generate a login token via the webfrontend of Nextcloud. This way, you can revoke this specific login at a later time without completely resetting your password. The token can be generated in `Settings → Security → Device & session → Create new app password`. This token will look like `t7j8o-qpW3H-Wy2BW-XC82X-t5pkM` and will only be showed once to you - so you better copy this tokken somewhere when you create it inside your Nextcloud))
+Now provide your individual login information. 
+> **TIP:** It is very handy to generate a login token via the webfrontend of Nextcloud. This way, you can revoke this specific login at a later time without completely resetting your password. The token can be generated in `Settings → Security → Device & session → Create new app password`. This token will look like `t7j8o-qpW3H-Wy2BW-XC82X-t5pkM` and will only be showed once to you - so you better copy this token somewhere when you create it inside your Nextcloud))
 
 ```
 User name
