@@ -39,6 +39,39 @@ or
 sudo pacman -S borg
 ```
 
+## configuration
+First, create a folder where the backup archive should be stored, e.g. by `mkdir borgbackup`. With the following step we setup or initialize a repository, which is **encrypted** and the encryption file itself is **secured by a password**
+```
+borg init -e keyfile-blake2 borgbackup
+Enter new passphrase: 
+Enter same passphrase again: 
+```
+> Option: Use quota to your repository, e.g. by providing `--storage-quota 2G`
+
+Now it is very important to save both **keyfile** and **password**. Once you need to access files from another system (e.g. if the backed-up system is dead) you will need both. So
+
+1.) Save your password to your password manager, where a copy hopefully resides on some place other than your main computer
+2.) Export your borg keyfile an store it on a safe place. Optionally: Use `--paper`, print it out and store it at your parent's place.
+    ```
+    borg key export borgbackup keyfile.txt
+    ```
+    > Hint: The keyfile is also stored in your home directory at `~/.config/borg/keyfile`
+
+
+## create a snapshot
+Define which files do you want to have in your backup archive. One way of specifying this in a flexible manner is the patternsfile which can be provided to borg.
+```sh
+# example patternsfile
+# define root directory:
+R /home/username/
+- **/.cache
+```
+
+
+```
+borg create -s --compression auto,lzma --patterns-from borgpatterns --progress borgbackup::everything-{now}
+```
+
 # Rclone
 ## installation
 First, [install](https://rclone.org/install/) Rclone as well.
