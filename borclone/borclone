@@ -1,0 +1,135 @@
+#!/bin/bash
+
+set -e
+
+
+BORG_OPTS=""
+BORG_OPTS_PRUNE=""
+RCLONE_OPTS=""
+
+if [[ -e ~/.borclone.conf ]]; then source ~/.borclone.conf
+elif [[ -e /etc/borclone.conf ]]; then source /etc/borclone.conf
+fi
+
+usage() {
+    echo "Usage: $0 back|up|backup"
+    echo "            [-c CONFIGFILE]"
+    echo "            [-n] [-e] [-v] [-p PATTERNFILE] [-b BORGDIR]"
+    echo "            [-a BORG_ARCHIVE] [-r RCLONE_TARGET]"
+    echo " "
+    echo "example: simulate a full backup incl. upload"
+    echo "         $0 backup -n -r \"nextcloud:/backup\""
+}
+exit_abnormal() {
+    usage
+    exit 1
+}
+
+COMMAND=${1}
+shift
+case "$COMMAND" in
+    back)
+        ;;
+    up)
+        ;;
+    backup)
+        ;;
+    *)
+        exit_abnormal
+        ;;
+esac
+        
+while getopts ":nevp:b:a:r:" options; do
+  case "${options}" in
+    n)
+      DRY_RUN="dry-run"
+      BORG_OPTS="${BORG_OPTS} --dry-run"
+      RCLONE_OPTS="${RCLONE_OPTS} --dry-run"
+      ;;
+    v)
+      if [[ -z "${DRY_RUN}" ]]; then   # statistics only valid if not
+                                       # running in dry-mode
+          BORG_OPTS="${BORG_OPTS} -s"
+      fi
+
+      BORG_OPTS="${BORG_OPTS} --progress"
+      BORG_OPTS_PRUNE="${BORG_OPTS_PRUNE} --list"
+      RCLONE_OPTS="${RCLONE_OPTS} -P"
+      ;;
+    e)
+      if [[ -z "${BORG_PASSPHRASE}" ]]; then
+          echo "please provide borg password by executing:"
+          echo "  read -s BORG_PASSPHRASE && export BORG_PASSPHRASE"
+          echo "in the current shell. This must be done only once"
+      fi
+      if [[ -z "${RCLONE_CONFIG_PASS}" ]]; then
+          echo "please provide rclone config password by executing:"
+          echo "  read -s RCLONE_CONFIG_PASS && export RCLONE_CONFIG_PASS"
+          echo "in the current shell. This must be done only once"
+          echo "if both coincide, do:"
+          echo "  export RCLONE_CONFIG_PASS=\$BORG_PASSPHRASE"
+      fi
+      if [[ -z "${RCLONE_CONFIG_PASS}" || -z "${BORG_PASSPHRASE}" ]]; then
+          exit 2
+      else
+          export RCLONE_CONFIG_PASS=${RCLONE_CONFIG_PASS}
+          export BORG_PASSPHRASE=${BORG_PASSPHRASE}
+      fi
+      ;;
+    p)
+      PATTERNFILE="$OPTARG"
+      if [[ ! -f ${PATTERNFILE} ]]; then
+          echo "patternfile is no regular file"
+          exit_abnormal
+      fi
+      ;;
+    b)
+      BORGDIR="$OPTARG"
+      if [[ ! -d ${BORGDIR} ]]; then
+          echo "borgdir is no directory"
+          exit_abnormal
+      fi
+      ;;
+    a)
+      ARCHIVE="$OPTARG"
+      ;;
+    r)
+      RCLONE_TARGET="$OPTARG"
+      ;;
+    :)                                    # If expected argument omitted:
+      echo "Error: -${OPTARG} requires an argument."
+      exit_abnormal                       # Exit abnormally.
+      ;;
+    *)                                    # If unknown (any other) option:
+      exit_abnormal                       # Exit abnormally.
+      ;;
+  esac
+done
+
+if [[ -z "$PATTERNFILE" ]]; then
+    echo "please provide PATTERNFILE"
+    exit_abnormal
+fi
+if [[ -z "$BORGDIR" ]]; then
+    echo "please provide BORGDIR"
+    exit_abnormal
+fi
+if [[ -z "$ARCHIVE" ]]; then
+    echo "please provide borg ARCHIVE name"
+    exit_abnormal
+fi
+if [[ -z "$RCLONE_TARGET" ]]; then
+    echo "please provide RCLONE_TARGET"
+    exit_abnormal
+fi
+
+if [[ "$COMMAND" == "back" || "$COMMAND" == "backup" ]]; then
+    borg create $BORG_OPTS --compression auto,lzma --patterns-from ${PATTERNFILE} ${BORGDIR}::${ARCHIVE}-{now}
+    borg prune $BORG_OPTS $BORG_OPTS_PRUNE -P "${ARCHIVE}-" \
+        --keep-hourly "${hourly}" --keep-daily "${daily}" \
+        --keep-weekly "${weekly}" --keep-monthly "${monthly}" \
+        ${BORGDIR}
+fi
+if [[ "$COMMAND" == "up" || "$COMMAND" == "backup" ]]; then
+    rclone sync ${RCLONE_OPTS} ${BORGDIR} ${RCLONE_TARGET}
+fi
