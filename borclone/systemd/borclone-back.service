@@ -1,0 +1,6 @@
+[Unit]
+Description=Run backup part of borclone
+
+[Service]
+User=tom
+ExecStart=/usr/local/bin/borclone back -e
