@@ -1,9 +1,9 @@
 # See systemd.timers and systemd.time manpages for details
 [Unit]
-Description=Run borg backup regularly
+Description=Run borg backup regularly, i.e. quarterly
 
 [Timer]
-OnCalendar=*:0/5
+OnCalendar=*:0/15
 Persistent=true
 
 [Install]
