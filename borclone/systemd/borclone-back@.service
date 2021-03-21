@@ -3,4 +3,4 @@ Description=Run backup part of borclone
 
 [Service]
 User=tom
-ExecStart=/usr/local/bin/borclone back -c /etc/borclone_%i.conf
+ExecStart=/usr/local/bin/borclone back -e -c /etc/borclone.d/%i.conf
