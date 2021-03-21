@@ -1,5 +1,5 @@
 [Unit]
-Description=Run backup part of borclone
+Description=Run backup part of borclone (%i)
 
 [Service]
 User=tom
