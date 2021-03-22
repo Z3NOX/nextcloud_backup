@@ -2,19 +2,14 @@
 
 set -e
 
-
-BORG_OPTS=""
-BORG_OPTS_PRUNE=""
-RCLONE_OPTS=""
-
-if [[ -e ~/.borclone.conf ]]; then source ~/.borclone.conf
-elif [[ -e /etc/borclone.conf ]]; then source /etc/borclone.conf
-fi
+BORG_OPTS=""        # define program options empty
+BORG_OPTS_PRUNE=""  # as they can be used
+RCLONE_OPTS=""      # this way
 
 usage() {
     echo "Usage: $0 back|up|backup"
     echo "            [-c CONFIGFILE]"
-    echo "            [-n] [-e] [-v] [-p PATTERNFILE] [-b BORGDIR]"
+    echo "            [-n] [-e] [-v] [-p BORG_PATTERNFILE] [-b BORG_DIR]"
     echo "            [-a BORG_ARCHIVE] [-r RCLONE_TARGET]"
     echo " "
     echo "example: simulate a full backup incl. upload"
@@ -39,59 +34,42 @@ case "$COMMAND" in
         ;;
 esac
         
-while getopts ":nevp:b:a:r:" options; do
+while getopts ":c:nevp:b:a:r:" options; do
   case "${options}" in
+    c)
+      CONFIGFILE="$OPTARG"
+      if [[ ! -f "${CONFIGFILE}" ]]; then
+          echo "configfile (\"${CONFIGFILE}\") is no regular file"
+          exit_abnormal
+      fi
+      ;;
     n)
       DRY_RUN="dry-run"
       BORG_OPTS="${BORG_OPTS} --dry-run"
       RCLONE_OPTS="${RCLONE_OPTS} --dry-run"
       ;;
     v)
-      if [[ -z "${DRY_RUN}" ]]; then   # statistics only valid if not
-                                       # running in dry-mode
-          BORG_OPTS="${BORG_OPTS} -s"
-      fi
-
-      BORG_OPTS="${BORG_OPTS} --progress"
-      BORG_OPTS_PRUNE="${BORG_OPTS_PRUNE} --list"
-      RCLONE_OPTS="${RCLONE_OPTS} -P"
+      VERBOSE="verbose"
       ;;
     e)
-      if [[ -z "${BORG_PASSPHRASE}" ]]; then
-          echo "please provide borg password by executing:"
-          echo "  read -s BORG_PASSPHRASE && export BORG_PASSPHRASE"
-          echo "in the current shell. This must be done only once"
-      fi
-      if [[ -z "${RCLONE_CONFIG_PASS}" ]]; then
-          echo "please provide rclone config password by executing:"
-          echo "  read -s RCLONE_CONFIG_PASS && export RCLONE_CONFIG_PASS"
-          echo "in the current shell. This must be done only once"
-          echo "if both coincide, do:"
-          echo "  export RCLONE_CONFIG_PASS=\$BORG_PASSPHRASE"
-      fi
-      if [[ -z "${RCLONE_CONFIG_PASS}" || -z "${BORG_PASSPHRASE}" ]]; then
-          exit 2
-      else
-          export RCLONE_CONFIG_PASS=${RCLONE_CONFIG_PASS}
-          export BORG_PASSPHRASE=${BORG_PASSPHRASE}
-      fi
+      ENCRYPT="encrypt"
       ;;
     p)
-      PATTERNFILE="$OPTARG"
+      BORG_PATTERNFILE="$OPTARG"
       if [[ ! -f ${PATTERNFILE} ]]; then
           echo "patternfile is no regular file"
           exit_abnormal
       fi
       ;;
     b)
-      BORGDIR="$OPTARG"
-      if [[ ! -d ${BORGDIR} ]]; then
-          echo "borgdir is no directory"
+      BORG_DIR="$OPTARG"
+      if [[ ! -d ${BORG_DIR} ]]; then
+          echo "BORG_DIR is no directory"
           exit_abnormal
       fi
       ;;
     a)
-      ARCHIVE="$OPTARG"
+      BORG_ARCHIVE="$OPTARG"
       ;;
     r)
       RCLONE_TARGET="$OPTARG"
@@ -106,16 +84,55 @@ while getopts ":nevp:b:a:r:" options; do
   esac
 done
 
-if [[ -z "$PATTERNFILE" ]]; then
-    echo "please provide PATTERNFILE"
+if [[ "${CONFIGFILE}" ]]; then source ${CONFIGFILE}
+# elif [[ -e ~/.borclone.conf ]]; then source ~/.borclone.conf
+# elif [[ -e /etc/borclone.conf ]]; then source /etc/borclone.conf
+fi
+
+
+if [[ "${VERBOSE}" ]]; then
+    # handle this out of getopts to avoid race condition
+    # with ${DRY_RUN} option order
+    if [[ -z "${DRY_RUN}" ]]; then   # statistics only valid if not
+                                     # running in dry-mode
+        BORG_OPTS="${BORG_OPTS} -s"
+    fi
+
+    BORG_OPTS="${BORG_OPTS} --progress"
+    BORG_OPTS_PRUNE="${BORG_OPTS_PRUNE} --list"
+    RCLONE_OPTS="${RCLONE_OPTS} -P"
+fi
+if [[ "${ENCRYPT}" ]]; then
+    if [[ -z "${BORG_PASSPHRASE}" ]]; then
+        echo "please provide borg password by executing:"
+        echo "  read -s BORG_PASSPHRASE && export BORG_PASSPHRASE"
+        echo "in the current shell. This must be done only once"
+    fi
+    if [[ -z "${RCLONE_CONFIG_PASS}" ]]; then
+        echo "please provide rclone config password by executing:"
+        echo "  read -s RCLONE_CONFIG_PASS && export RCLONE_CONFIG_PASS"
+        echo "in the current shell. This must be done only once"
+        echo "if both coincide, do:"
+        echo "  export RCLONE_CONFIG_PASS=\$BORG_PASSPHRASE"
+    fi
+    if [[ -z "${RCLONE_CONFIG_PASS}" || -z "${BORG_PASSPHRASE}" ]]; then
+        exit 2
+    else
+        export RCLONE_CONFIG_PASS=${RCLONE_CONFIG_PASS}
+        export BORG_PASSPHRASE=${BORG_PASSPHRASE}
+    fi
+fi
+
+if [[ -z "$BORG_PATTERNFILE" ]]; then
+    echo "please provide BORG_PATTERNFILE"
     exit_abnormal
 fi
-if [[ -z "$BORGDIR" ]]; then
-    echo "please provide BORGDIR"
+if [[ -z "$BORG_DIR" ]]; then
+    echo "please provide BORG_DIR"
     exit_abnormal
 fi
-if [[ -z "$ARCHIVE" ]]; then
-    echo "please provide borg ARCHIVE name"
+if [[ -z "$BORG_ARCHIVE" ]]; then
+    echo "please provide borg BORG_ARCHIVE name"
     exit_abnormal
 fi
 if [[ -z "$RCLONE_TARGET" ]]; then
@@ -124,12 +141,12 @@ if [[ -z "$RCLONE_TARGET" ]]; then
 fi
 
 if [[ "$COMMAND" == "back" || "$COMMAND" == "backup" ]]; then
-    borg create $BORG_OPTS --compression auto,lzma --patterns-from ${PATTERNFILE} ${BORGDIR}::${ARCHIVE}-{now}
-    borg prune $BORG_OPTS $BORG_OPTS_PRUNE -P "${ARCHIVE}-" \
+    borg create $BORG_OPTS --compression auto,lzma --patterns-from "${BORG_PATTERNFILE}" "${BORG_DIR}::${BORG_ARCHIVE}"-{now}
+    borg prune $BORG_OPTS $BORG_OPTS_PRUNE -P "${BORG_ARCHIVE}-" \
         --keep-hourly "${hourly}" --keep-daily "${daily}" \
         --keep-weekly "${weekly}" --keep-monthly "${monthly}" \
-        ${BORGDIR}
+        "${BORG_DIR}"
 fi
 if [[ "$COMMAND" == "up" || "$COMMAND" == "backup" ]]; then
-    rclone sync ${RCLONE_OPTS} ${BORGDIR} ${RCLONE_TARGET}
+    rclone sync ${RCLONE_OPTS} "${BORG_DIR}" "${RCLONE_TARGET}"
 fi
