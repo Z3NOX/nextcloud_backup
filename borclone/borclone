@@ -34,7 +34,7 @@ case "$COMMAND" in
         ;;
 esac
         
-while getopts ":c:nevp:b:a:r:" options; do
+while getopts ":c:neuvp:b:a:r:" options; do
   case "${options}" in
     c)
       CONFIGFILE="$OPTARG"
@@ -53,6 +53,9 @@ while getopts ":c:nevp:b:a:r:" options; do
       ;;
     e)
       ENCRYPT="encrypt"
+      ;;
+    u)
+      UNLOCK_RCLONE="unlock"
       ;;
     p)
       BORG_PATTERNFILE="$OPTARG"
@@ -108,6 +111,13 @@ if [[ "${ENCRYPT}" ]]; then
         echo "  read -s BORG_PASSPHRASE && export BORG_PASSPHRASE"
         echo "in the current shell. This must be done only once"
     fi
+    if [[ -z "${BORG_PASSPHRASE}" ]]; then
+        exit 2
+    else
+        export BORG_PASSPHRASE=${BORG_PASSPHRASE}
+    fi
+fi
+if [[ "${UNLOCK_RCLONE}" ]]; then
     if [[ -z "${RCLONE_CONFIG_PASS}" ]]; then
         echo "please provide rclone config password by executing:"
         echo "  read -s RCLONE_CONFIG_PASS && export RCLONE_CONFIG_PASS"
@@ -115,11 +125,10 @@ if [[ "${ENCRYPT}" ]]; then
         echo "if both coincide, do:"
         echo "  export RCLONE_CONFIG_PASS=\$BORG_PASSPHRASE"
     fi
-    if [[ -z "${RCLONE_CONFIG_PASS}" || -z "${BORG_PASSPHRASE}" ]]; then
+    if [[ -z "${RCLONE_CONFIG_PASS}" ]]; then
         exit 2
     else
         export RCLONE_CONFIG_PASS=${RCLONE_CONFIG_PASS}
-        export BORG_PASSPHRASE=${BORG_PASSPHRASE}
     fi
 fi
 
