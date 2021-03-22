@@ -1,9 +1,9 @@
 # See systemd.timers and systemd.time manpages for details
 [Unit]
-Description=Run borg upload regularly, i.e. every hour
+Description=Run borg upload regularly, i.e. hourly XX:05
 
 [Timer]
-OnCalendar=*:0
+OnCalendar=*:05
 Persistent=true
 
 [Install]
