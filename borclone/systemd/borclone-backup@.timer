@@ -1,0 +1,10 @@
+# See systemd.timers and systemd.time manpages for details
+[Unit]
+Description=Run complete borclon backup regularly, i.e. every half an hour
+
+[Timer]
+OnCalendar=*:0/30:0
+Persistent=true
+
+[Install]
+WantedBy=timers.target

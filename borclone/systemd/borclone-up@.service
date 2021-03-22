@@ -1,0 +1,6 @@
+[Unit]
+Description=Run upload part of borclone (%i)
+
+[Service]
+User=tom
+ExecStart=/usr/local/bin/borclone up -c /etc/borclone.d/%i.conf
