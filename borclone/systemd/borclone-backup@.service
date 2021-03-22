@@ -1,0 +1,6 @@
+[Unit]
+Description=Run complete backup of borclone (%i) including upload
+
+[Service]
+User=tom
+ExecStart=/usr/local/bin/borclone backup  -c /etc/borclone.d/%i.conf
