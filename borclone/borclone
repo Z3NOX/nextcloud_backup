@@ -182,7 +182,7 @@ if [[ "$COMMAND" == "back" || "$COMMAND" == "backup" ]]; then
         "${BORG_DIR}"
 fi
 if [[ "$COMMAND" == "up" || "$COMMAND" == "backup" ]]; then
-    rclone sync ${RCLONE_OPTS} "${BORG_DIR}" "${RCLONE_TARGET}"
+    borg with-lock "${BORG_DIR}" "rclone" "sync" ${RCLONE_OPTS} "${BORG_DIR}" "${RCLONE_TARGET}"
 fi
 if [[ "$COMMAND" == "diffs" ]]; then
     last_borg_archive="$(borg info --json ${BORG_DIR} -P ${BORG_ARCHIVE} --last 1 | jq -r '.archives[0].name')"
