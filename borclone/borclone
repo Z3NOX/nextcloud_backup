@@ -19,6 +19,10 @@ exit_abnormal() {
     usage
     exit 1
 }
+if ! command -v borg &> /dev/null; then
+    echo "borg could not be found. It is required for backups"
+    exit 2
+fi
 
 COMMAND=${1}
 shift
@@ -26,6 +30,10 @@ case "$COMMAND" in
     back)
         ;;
     up)
+        if ! command -v rclone &> /dev/null; then
+            echo "rclone could not be found. It is required for syncing"
+            exit 2
+        fi
         ;;
     down)
         if ! command -v rclone &> /dev/null; then
@@ -34,6 +42,10 @@ case "$COMMAND" in
         fi
         ;;
     backup)
+        if ! command -v rclone &> /dev/null; then
+            echo "rclone could not be found. It is required for syncing"
+            exit 2
+        fi
         ;;
     diffs)
         if ! command -v jq &> /dev/null; then
