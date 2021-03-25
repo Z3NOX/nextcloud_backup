@@ -7,7 +7,7 @@ BORG_OPTS_PRUNE=""  # as they can be used
 RCLONE_OPTS=""      # this way
 
 usage() {
-    echo "Usage: $0 back|up|backup"
+    echo "Usage: $0 back|up|backup|diffs"
     echo "            [-c CONFIGFILE]"
     echo "            [-n] [-e] [-v] [-p BORG_PATTERNFILE] [-b BORG_DIR]"
     echo "            [-a BORG_ARCHIVE] [-r RCLONE_TARGET]"
@@ -27,7 +27,20 @@ case "$COMMAND" in
         ;;
     up)
         ;;
+    down)
+        if ! command -v rclone &> /dev/null; then
+            echo "rclone could not be found. It is required for syncing"
+            exit 2
+        fi
+        ;;
     backup)
+        ;;
+    diffs)
+        if ! command -v jq &> /dev/null; then
+            echo " jq could not be found. It is required for diffing"
+            exit 2
+        fi
+
         ;;
     *)
         exit_abnormal
@@ -158,4 +171,11 @@ if [[ "$COMMAND" == "back" || "$COMMAND" == "backup" ]]; then
 fi
 if [[ "$COMMAND" == "up" || "$COMMAND" == "backup" ]]; then
     rclone sync ${RCLONE_OPTS} "${BORG_DIR}" "${RCLONE_TARGET}"
+fi
+if [[ "$COMMAND" == "diffs" ]]; then
+    last_borg_archive="$(borg info --json ${BORG_DIR} -P ${BORG_ARCHIVE} --last 1 | jq -r '.archives[0].name')"
+    borg info --json ${BORG_DIR} -P ${BORG_ARCHIVE} |\
+        jq -r '.archives[].name' |\
+        xargs -I{} -d "\n" -n1 \
+        sh -c "echo -e \"\ndiff to {}\"; borg diff ${BORG_DIR}::{} ${last_borg_archive}"
 fi
