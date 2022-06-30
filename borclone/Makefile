@@ -1,4 +1,5 @@
 TMPDIR := $(shell mktemp -d)
+ETC := "/etc"
 RUNUSER := "root"
 
 install: install-config install-systemd
@@ -7,27 +8,27 @@ install: install-config install-systemd
 
 
 install-config:
-	[ -d /etc/borclone.d ] || install -Dm755 -d /etc/borclone.d
-	[ -f /etc/borclone.d/main.conf ] || install -Dm600 -o ${RUNUSER} borclone.conf /etc/borclone.d/main.conf
+	[ -d ${ETC}/borclone.d ] || install -Dm755 -d ${ETC}/borclone.d
+	[ -f ${ETC}/borclone.d/main.conf ] || install -Dm600 -o ${RUNUSER} borclone.conf ${ETC}/borclone.d/main.conf
 
 install-systemd: systemd/*
 	mkdir -p ${TMPDIR}/systemd
 	for file in $^; do \
 		sed "s/\$${USER}/${RUNUSER}/" $${file} > ${TMPDIR}/$${file}; \
-	        [ ! -d /etc/systemd/system ] || \
-			install -Dm644  ${TMPDIR}/$${file} /etc/systemd/system/; \
+	        [ ! -d ${ETC}/systemd/system ] || \
+			install -Dm644  ${TMPDIR}/$${file} ${ETC}/systemd/system/; \
 	done
 
 
 uninstall:
 	rm /usr/local/bin/borclone
-	rm /etc/borclone.d/main.conf
-	rm /etc/systemd/system/borclone-back@.timer
-	rm /etc/systemd/system/borclone-back@.service
-	rm /etc/systemd/system/borclone-up@.timer
-	rm /etc/systemd/system/borclone-up@.service
-	rm /etc/systemd/system/borclone-backup@.timer
-	rm /etc/systemd/system/borclone-backup@.service
-	rmdir /etc/borclone.d
+	rm ${ETC}/borclone.d/main.conf
+	rm ${ETC}/systemd/system/borclone-back@.timer
+	rm ${ETC}/systemd/system/borclone-back@.service
+	rm ${ETC}/systemd/system/borclone-up@.timer
+	rm ${ETC}/systemd/system/borclone-up@.service
+	rm ${ETC}/systemd/system/borclone-backup@.timer
+	rm ${ETC}/systemd/system/borclone-backup@.service
+	rmdir ${ETC}/borclone.d
 	rm -r ${TMPDIR}
 
